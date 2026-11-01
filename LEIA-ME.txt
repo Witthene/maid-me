@@ -10,7 +10,8 @@ Claude, ChatGPT e outras).
 COMO INSTALAR
 1. Extraia esta pasta num lugar fixo (por exemplo, Documentos).
 2. Dê dois cliques em "Instalar Maid Me.bat".
-3. Preencha a configuração que abre no final e clique em "Salvar e iniciar".
+3. O Maid Me abre sozinho: crie sua assistente na tela de boas-vindas.
+   Pra mudar depois, clique na foto dela e em "Configurar assistente".
 O passo a passo completo está no GUIA.html.
 
 O QUE O INSTALADOR FAZ
@@ -36,3 +37,7 @@ pedem a sua confirmação por voz antes.
 
 DESINSTALAR
 Apague esta pasta e os atalhos "Maid Me" da área de trabalho e do menu Iniciar.
+
+LINUX
+No terminal, dentro desta pasta:  bash "Instalar Maid Me (Linux).sh"
+Depois abra pelo atalho Maid Me no menu de aplicativos. Detalhes no GUIA.html.

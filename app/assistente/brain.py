@@ -33,7 +33,7 @@ PROVIDERS = {
 
 # --- Claude Code -------------------------------------------------------------
 # Only what the assistant needs: every extra tool, MCP server or command adds tokens to every turn
-TOOLS = "PowerShell,Read,Write,Edit,WebSearch,WebFetch"
+TOOLS = ("PowerShell" if os.name == "nt" else "Bash") + ",Read,Write,Edit,WebSearch,WebFetch"
 LEAN_FLAGS = ["--tools", TOOLS, "--strict-mcp-config", "--disable-slash-commands", "--no-chrome",
               "--no-session-persistence"]
 
@@ -117,6 +117,10 @@ TOOL_SPECS = [
     ("WebSearch", "Pesquisa na internet e devolve os primeiros resultados.", {"query": ("string", "O que pesquisar.")}),
     ("WebFetch", "Abre uma página da internet e devolve o texto dela.", {"url": ("string", "Endereço da página.")}),
 ]
+if os.name != "nt":  # Linux: a Bash tool instead of PowerShell
+    TOOL_SPECS[0] = ("Bash", "Roda um comando no terminal Bash do Linux do usuário e devolve a saída.",
+                     {"command": ("string", "O comando Bash."),
+                      "description": ("string", "O que o comando faz, em português, começando com verbo no infinitivo.")})
 OUTPUT_LIMIT = 8000
 UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/130 Safari/537.36"}
 
@@ -137,6 +141,11 @@ def _page_text(raw):
 
 def run_tool(name, args, cwd):
     try:
+        if name == "Bash":
+            r = subprocess.run(["bash", "-lc", args.get("command", "")], cwd=cwd, capture_output=True, text=True,
+                               encoding="utf-8", errors="replace", timeout=120)
+            out = (r.stdout + ("\n" + r.stderr if r.stderr.strip() else "")).strip()
+            return _clip(f"(código de saída {r.returncode})\n{out}" if r.returncode else out or "(sem saída)")
         if name == "PowerShell":
             cmd = "[Console]::OutputEncoding=[Text.Encoding]::UTF8; " + args.get("command", "")
             r = subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", cmd], cwd=cwd,

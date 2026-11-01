@@ -23,7 +23,7 @@
 
 <h2>Do que você precisa</h2>
 <ul>
-  <li>Windows 10 ou 11 e um microfone.</li>
+  <li>Windows 10 ou 11, ou Linux (Ubuntu, Fedora, Arch...), e um microfone.</li>
   <li>Uma chave de API de alguma IA (tem opção grátis, veja abaixo) <i>ou</i> uma assinatura do Claude.</li>
   <li>Recomendado: placa de vídeo NVIDIA. Sem ela funciona, só entende a voz um pouco mais devagar.</li>
 </ul>
@@ -32,21 +32,31 @@
 <ol>
   <li>Extraia a pasta num lugar fixo, por exemplo <code>Documentos\Maid Me</code> (não deixe dentro de Downloads, nem dentro de Arquivos de Programas).</li>
   <li>Dê dois cliques em <code>Instalar Maid Me.bat</code>. Ele instala o Python se precisar, baixa as bibliotecas e cria atalhos no menu Iniciar e o atalho <b>Maid Me</b> na área de trabalho. Demora alguns minutos.</li>
-  <li>No fim, o configurador abre sozinho. Dá pra abrir de novo depois pelo atalho <b>Configurar Maid Me</b> no menu Iniciar.</li>
+  <li>No fim, o Maid Me abre sozinho e mostra a tela de boas-vindas pra criar sua assistente.</li>
 </ol>
 <div class="box warn">Se o Windows mostrar "O Windows protegeu o computador", clique em <b>Mais informações</b> &rarr; <b>Executar assim mesmo</b>.</div>
 
+<h3>No Linux</h3>
+<ol>
+  <li>Extraia a pasta num lugar fixo, por exemplo <code>~/Maid Me</code>.</li>
+  <li>Abra um terminal na pasta e rode <code>bash "Instalar Maid Me (Linux).sh"</code>. Ele pede sua senha pra instalar o que falta no sistema (Ubuntu/Debian, Fedora e Arch), baixa as bibliotecas e cria o atalho <b>Maid Me</b> no menu de aplicativos.</li>
+  <li>Funciona melhor numa sessão <b>X11</b> (na tela de login, escolha "Xorg"). No Wayland ela conversa normalmente, mas os efeitos em cima das janelas e os comentários sobre o programa que você está usando ficam desligados.</li>
+  <li>O avatar flutuante do VTube Studio é só do Windows.</li>
+</ol>
+
 <h2>2. Configurar</h2>
+<p>Tudo é configurado dentro do próprio app. Na primeira vez a tela abre sozinha; depois é só clicar na <b>foto da assistente</b> no topo da janela e em <b>Configurar assistente</b> (ou no <b>+</b> &rarr; <b>Configurar</b>). Ao salvar, o app reinicia com as mudanças.</p>
 <h3>Aba Identidade</h3>
 <ul>
+  <li><b>Gênero</b>: feminino, masculino ou neutro. Muda como ela(e) fala de si mesma(o).</li>
   <li><b>Nome do assistente</b>: o nome que você vai falar pra chamar. Nomes curtos e incomuns funcionam melhor (o reconhecimento confunde nomes que parecem palavras comuns).</li>
-  <li><b>Outras grafias</b>: se você chama e ela não atende, olhe na janela preta como o nome foi escrito (ex.: "Mica" virou "Mika") e coloque aqui, separado por vírgula.</li>
+  <li><b>Outras grafias</b>: se você chama e ela não atende, olhe no chat como o nome foi escrito (ex.: "Mica" virou "Mika") e coloque aqui, separado por vírgula.</li>
   <li><b>Personalidade</b>: escolha uma pronta ou escreva a sua na caixa de descrição.</li>
   <li><b>Coisas sobre você</b>: o que ela deve sempre saber (seus jogos, apelido, etc.).</li>
 </ul>
 
-<h3>Aba Cérebro: qual IA usar</h3>
-<p>Escolha um serviço, cole a chave e clique em <b>Testar cérebro</b>. <b>Listar modelos</b> mostra os modelos disponíveis na sua conta.</p>
+<h3>Aba Inteligência: qual IA usar</h3>
+<p>Escolha um serviço e clique no botão <b>Pegar a chave</b>: ele abre direto a página certa. Cole a chave e clique em <b>Testar</b>. <b>Listar modelos</b> mostra os modelos disponíveis na sua conta.</p>
 <table>
   <tr><th>Opção</th><th>Custo</th><th>Onde pegar a chave</th></tr>
   <tr><td>Google Gemini</td><td>Tem uso gratuito, ótimo pra começar</td><td><a href="https://aistudio.google.com/apikey">aistudio.google.com/apikey</a> &rarr; "Create API key"</td></tr>
@@ -58,46 +68,48 @@
   <tr><td>DeepSeek</td><td>Pago, bem barato</td><td><a href="https://platform.deepseek.com">platform.deepseek.com</a></td></tr>
   <tr><td>Ollama</td><td>Grátis, roda no seu PC (precisa de PC forte)</td><td>Sem chave: instale em <a href="https://ollama.com">ollama.com</a> e baixe um modelo que use ferramentas</td></tr>
 </table>
-<div class="box"><b>Claude pela assinatura:</b> instale o <a href="https://nodejs.org">Node.js</a> (versão LTS), abra o PowerShell e rode <code>npm install -g @anthropic-ai/claude-code</code>. Depois rode <code>claude</code>, faça login com sua conta e feche. Pronto, é só escolher "Claude (assinatura)" no configurador.</div>
+<div class="box"><b>Claude pela assinatura:</b> instale o <a href="https://nodejs.org">Node.js</a> (versão LTS), abra o PowerShell e rode <code>npm install -g @anthropic-ai/claude-code</code>. Depois rode <code>claude</code>, faça login com sua conta e feche. Pronto, é só escolher "Claude · assinatura" na aba Inteligência.</div>
 <div class="box warn">A chave de API é como uma senha: não mande pra ninguém. Ela fica só no arquivo <code>app\.env</code>. Modelos pequenos/fracos às vezes se atrapalham pra usar o PC; se ela fizer besteira, troque por um modelo melhor.</div>
 
-<h3>Aba Voz</h3>
+<h3>Aba Voz e ouvido</h3>
+<p>Os botões <b>Pegar a chave</b> e <b>Escolher uma voz</b> abrem as páginas certas de cada serviço.</p>
 <ul>
   <li><b>Microsoft Edge</b>: grátis e sem chave. Escolha a voz na lista e clique em <b>Ouvir a voz</b>.</li>
   <li><b>Fish Audio</b> (<a href="https://fish.audio">fish.audio</a>): vozes muito mais naturais e de personagens. A chave fica em API Keys no painel; o ID da voz é o código que aparece no endereço da página da voz.</li>
   <li><b>ElevenLabs</b> (<a href="https://elevenlabs.io">elevenlabs.io</a>): a chave fica no seu perfil; o ID aparece na biblioteca de vozes ("Copy voice ID").</li>
 </ul>
 
-<h3>Aba Microfone</h3>
-<p>Escolha o microfone (vazio = o padrão do Windows). Sem placa NVIDIA, o programa usa automaticamente um reconhecimento mais leve.</p>
+<p>Escolha o microfone (ou deixe o padrão do Windows). Sem placa NVIDIA, o programa usa automaticamente um reconhecimento mais leve.</p>
 
-<h3>Aba Avatar e extras (opcional)</h3>
+<h3>Aba Recursos</h3>
+<p>Ligue só o que quiser: lembrar das conversas, efeitos de hacker, comentar o que você faz na tela, avatar do VTube Studio e avatar flutuante.</p>
+<h4>Avatar (opcional)</h4>
 <ol>
   <li>Instale o <b>VTube Studio</b> (grátis na Steam) e carregue um modelo.</li>
   <li>No VTube Studio, vá em Configurações e ligue <b>"Start API (allow plugins)"</b> na porta 8001.</li>
-  <li>Marque "Usar avatar do VTube Studio" no configurador. Na primeira vez, aceite o pedido do plugin dentro do VTube Studio.</li>
+  <li>Marque "Usar avatar do VTube Studio" na aba Recursos. Na primeira vez, aceite o pedido do plugin dentro do VTube Studio.</li>
   <li>A boca mexe com a voz. Para as expressões funcionarem, o modelo precisa ter expressões com nomes como <i>feliz/happy</i>, <i>brava/angry</i>, <i>triste/sad</i>, <i>surpresa/surprise</i>, <i>convencida/smug</i>.</li>
   <li>"Avatar flutuando": mostra o modelo no canto da tela, por cima de tudo. Deixe o fundo do VTube Studio numa cor sólida e a janela dele aberta (pode ficar atrás das outras, só não minimize).</li>
 </ol>
 
 <h2>3. Usar</h2>
 <ul>
-  <li>Abra pelo atalho <b>Maid Me</b>. Espere aparecer "Pronto" na janela preta.</li>
+  <li>Abra pelo atalho <b>Maid Me</b>. Espere a janela dizer que está online.</li>
   <li>Fale <b>"Ei, &lt;nome&gt;, abre o YouTube"</b>. Depois que ela responde, dá pra continuar falando por uns segundos sem repetir o nome.</li>
   <li>Pra calar a boca dela: <b>"&lt;nome&gt;, para"</b>.</li>
   <li>Coisas perigosas (formatar disco, apagar pasta do sistema, desligar o PC...) ela pergunta antes. Responda <b>sim</b> ou <b>não</b> falando.</li>
-  <li>Sem microfone? Rode <code>app\Iniciar.bat --texto</code> pra conversar digitando.</li>
-  <li>Pra fechar: feche a janela preta ou aperte <kbd>Ctrl</kbd>+<kbd>C</kbd> nela.</li>
+  <li>Sem microfone? É só digitar na caixa de mensagem da janela.</li>
+  <li>Pra fechar: feche a janela.</li>
 </ul>
 
 <h2>Problemas comuns</h2>
 <table>
   <tr><th>Problema</th><th>Solução</th></tr>
-  <tr><td>Ela não atende quando chamo</td><td>Veja na janela preta como o nome foi escrito e adicione em "Outras grafias". Confira se o microfone certo está escolhido.</td></tr>
-  <tr><td>"Meu cérebro deu erro"</td><td>Abra o configurador e use "Testar cérebro": geralmente é chave errada, crédito acabado ou nome de modelo errado.</td></tr>
-  <tr><td>Não sai som</td><td>Use "Ouvir a voz" no configurador e confira a saída de som do Windows.</td></tr>
-  <tr><td>Demora muito pra entender o que falei</td><td>Sem placa NVIDIA isso é normal. Escolha "base" em Precisão do reconhecimento pra ficar mais rápido.</td></tr>
-  <tr><td>Quero mudar a personalidade a fundo</td><td>Edite o arquivo <code>app\persona.md</code> (é o "roteiro" dela). Atenção: o configurador reescreve esse arquivo quando você salva.</td></tr>
+  <tr><td>Ela não atende quando chamo</td><td>Veja no chat como o nome foi escrito e adicione em "Outras grafias". Confira se o microfone certo está escolhido.</td></tr>
+  <tr><td>"Meu cérebro deu erro"</td><td>Abra Configurar &rarr; Inteligência e use "Testar": geralmente é chave errada, crédito acabado ou nome de modelo errado.</td></tr>
+  <tr><td>Não sai som</td><td>Use "Ouvir a voz" em Configurar &rarr; Voz e ouvido e confira a saída de som do Windows.</td></tr>
+  <tr><td>Demora muito pra entender o que falei</td><td>Sem placa NVIDIA isso é normal. Escolha "Básica" em Precisão pra te entender pra ficar mais rápido.</td></tr>
+  <tr><td>Quero mudar a personalidade a fundo</td><td>Edite o arquivo <code>app\persona.md</code> (é o "roteiro" dela). Atenção: salvar as configurações reescreve esse arquivo.</td></tr>
 </table>
 </body>
 </html>

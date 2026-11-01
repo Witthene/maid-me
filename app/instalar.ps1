@@ -48,10 +48,10 @@ $shell = New-Object -ComObject WScript.Shell
 $icon = Join-Path $PSScriptRoot 'assets\maidme.ico'
 $menu = Join-Path ([Environment]::GetFolderPath('Programs')) 'Maid Me'
 New-Item -ItemType Directory -Force $menu | Out-Null
+Remove-Item (Join-Path $menu 'Configurar Maid Me.lnk') -ErrorAction SilentlyContinue  # old versions had a separate configurator
 foreach ($s in @(
         @{ Path = Join-Path ([Environment]::GetFolderPath('Desktop')) 'Maid Me.lnk'; Target = 'Iniciar.bat'; Desc = 'Iniciar a assistente' },
-        @{ Path = Join-Path $menu 'Maid Me.lnk'; Target = 'Iniciar.bat'; Desc = 'Iniciar a assistente' },
-        @{ Path = Join-Path $menu 'Configurar Maid Me.lnk'; Target = 'Configurar.bat'; Desc = 'Configurar a assistente' })) {
+        @{ Path = Join-Path $menu 'Maid Me.lnk'; Target = 'Iniciar.bat'; Desc = 'Iniciar a assistente' })) {
     $lnk = $shell.CreateShortcut($s.Path)
     $lnk.TargetPath = Join-Path $PSScriptRoot $s.Target
     $lnk.WorkingDirectory = $PSScriptRoot
@@ -61,5 +61,5 @@ foreach ($s in @(
 }
 
 Write-Host ''
-Write-Host 'Instalacao concluida. Abrindo a configuracao...' -ForegroundColor Green
-Start-Process (Join-Path $PSScriptRoot 'Configurar.bat')
+Write-Host 'Instalacao concluida. Abrindo o Maid Me...' -ForegroundColor Green
+Start-Process (Join-Path $PSScriptRoot 'Iniciar.bat')

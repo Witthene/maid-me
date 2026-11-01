@@ -6,6 +6,7 @@ Each utterance is cleaned up (low rumble removed, volume evened out) before Whis
 """
 import collections
 import queue
+import sys
 import threading
 
 import numpy as np
@@ -69,7 +70,20 @@ class MicListener:
         self._pending = np.zeros(0, dtype=np.float32)
         self._preroll = collections.deque(maxlen=PREROLL_CHUNKS)
         self._chunks = queue.Queue()
+        self.level = 0.0
+        self._note = None  # raw 16 kHz audio while a voice message is being recorded
         self._reset()
+
+    def start_note(self):
+        self._note = []
+
+    def stop_note(self):
+        """Ends the voice message and returns it cleaned up, or None if it was too short."""
+        note, self._note = self._note, None
+        if not note:
+            return None
+        pcm = np.concatenate(note)
+        return clean(pcm) if len(pcm) >= 0.5 * RATE else None
 
     def start(self):
         self._stream = sd.InputStream(samplerate=self._rate, channels=self._channels, dtype="float32",
@@ -86,13 +100,18 @@ class MicListener:
 
     def _on_audio(self, indata, frames, time_info, status):
         # keep the audio callback light: just hand the raw block to the detector thread
-        self._chunks.put(indata.mean(axis=1).copy())
+        mono = indata.mean(axis=1).copy()
+        self.level = float(np.sqrt(np.mean(mono * mono))) if len(mono) else 0.0  # for the call screen's waves
+        self._chunks.put(mono)
 
     def _detect_loop(self):
         while True:
             block = self._chunks.get()
             # keep listening while the assistant talks so "<nome>, para" can cut her off; those utterances get flagged
-            self._pending = np.concatenate([self._pending, self._resampler.resample_chunk(block)])
+            audio = self._resampler.resample_chunk(block)
+            if self._note is not None:
+                self._note.append(audio)
+            self._pending = np.concatenate([self._pending, audio])
             while len(self._pending) >= CHUNK:
                 chunk, self._pending = self._pending[:CHUNK], self._pending[CHUNK:]
                 self._feed(chunk)
@@ -123,12 +142,16 @@ class MicListener:
             self._reset()
 
 
+def _native(dev, apis):
+    # Windows: the WASAPI copy of each mic (native rate, no Windows resampling). Linux: any input.
+    return sys.platform != "win32" or "WASAPI" in apis[dev["hostapi"]]["name"]
+
+
 def _wasapi(name):
     """Index of the WASAPI input device whose name contains `name`, or None."""
     apis = sd.query_hostapis()
     for i, dev in enumerate(sd.query_devices()):
-        if (dev["max_input_channels"] > 0 and "WASAPI" in apis[dev["hostapi"]]["name"]
-                and name.lower() in dev["name"].lower()):
+        if dev["max_input_channels"] > 0 and _native(dev, apis) and name.lower() in dev["name"].lower():
             return i
     return None
 
@@ -136,6 +159,8 @@ def _wasapi(name):
 def find_device(name):
     """Input device to use, preferring the WASAPI version (native rate, no Windows resampling)."""
     if not name:
+        if sys.platform != "win32":
+            return None  # PulseAudio/PipeWire's default input
         default = sd.query_devices(sd.default.device[0])["name"]
         return _wasapi(default.split("(")[-1].rstrip(")")) if "(" in default else _wasapi(default)
     found = _wasapi(name)
@@ -150,5 +175,5 @@ def find_device(name):
 def list_devices():
     apis = sd.query_hostapis()
     for i, dev in enumerate(sd.query_devices()):
-        if dev["max_input_channels"] > 0 and "WASAPI" in apis[dev["hostapi"]]["name"]:
+        if dev["max_input_channels"] > 0 and _native(dev, apis):
             print(f"  {i:3d}  {dev['name']}")

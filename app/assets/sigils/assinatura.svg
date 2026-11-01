@@ -1,0 +1,11 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" stroke="white" stroke-width="6" stroke-linejoin="miter">
+  <!-- Yui: a Y inside a broken hexagon with circuit traces -->
+  <path d="M100 12 L176 56 L176 100 M176 128 L176 144 L100 188 L24 144 L24 56 L70 30"/>
+  <path d="M62 58 L100 104 L138 58" stroke-width="12"/>
+  <path d="M100 104 L100 160" stroke-width="12"/>
+  <path d="M138 58 L160 36 M62 58 L44 76 L44 120 M100 160 L130 160 L146 144"/>
+  <circle cx="160" cy="36" r="6" fill="white"/>
+  <circle cx="44" cy="120" r="6" fill="white"/>
+  <circle cx="146" cy="144" r="6" fill="white"/>
+  <rect x="94" y="22" width="12" height="12" fill="white" stroke="none"/>
+</svg>

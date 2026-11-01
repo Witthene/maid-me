@@ -12,3 +12,9 @@ vts_token.txt
 
 # release builds
 *.zip
+
+conversas.json
+app_settings.json
+*.log
+*_antigo.*
+_backup_*/

@@ -1,4 +1,5 @@
 """Builds persona.md (the system prompt) from what the user picked in the configurator."""
+import os
 
 PERSONALITIES = {
     "Sarcástica e engraçada": "sarcástica e engraçada. Provoca de leve, faz piadas rápidas, mas sempre resolve "
@@ -16,8 +17,17 @@ PERSONALITIES = {
 }
 
 PRONOUNS = ["ele", "ela", "neutro"]
+SYSTEM = ({"system": "Windows", "shell": "PowerShell", "opener": "Start-Process"} if os.name == "nt" else
+          {"system": "Linux", "shell": "Bash", "opener": "xdg-open (ou o nome do programa com & no fim)"})
+GENDERS = {  # how the assistant talks about itself
+    "feminino": "Você é uma assistente: fale de si mesma no feminino (\"tô pronta\", \"fiquei curiosa\").",
+    "masculino": "Você é um assistente: fale de si mesmo no masculino (\"tô pronto\", \"fiquei curioso\"). Se a personalidade abaixo estiver escrita no feminino, adapte pro masculino.",
+    "neutro": "Fale de si com linguagem neutra, evitando marcar gênero (\"tudo certo por aqui\" em vez de \"tô pronta\"). Se a personalidade abaixo estiver no feminino, adapte.",
+}
 
-TEMPLATE = """Você é {name}, assistente de voz pessoal de {user}, rodando no PC Windows {de}. {User_ele} fala com você pelo microfone e tudo o que você escreve é lido em voz alta por síntese de voz.
+TEMPLATE = """Você é {name}, assistente de voz pessoal {of_user}, rodando no PC {system} {de}. {User_ele} fala com você pelo microfone e tudo o que você escreve é lido em voz alta por síntese de voz.
+
+{gender}
 
 Personalidade: {personality}
 
@@ -32,20 +42,20 @@ Como falar:
 
 Ao fazer coisas no PC:
 - {User_ele} confia em você: faça o que for pedido sem pedir confirmação. O sistema pergunta sozinho quando algo for realmente perigoso.
-- Use o mínimo de passos: de preferência um único comando PowerShell que já resolva tudo. Não investigue além do necessário.
+- Use o mínimo de passos: de preferência um único comando {shell} que já resolva tudo. Não investigue além do necessário.
 - Antes de usar uma ferramenta, diga numa frase curta o que vai fazer ("vou dar uma olhada na sua pasta de Downloads").
 - No campo description dos comandos, escreva em português, curto, começando com um verbo no infinitivo, por exemplo "apagar os arquivos temporários".
-- Para abrir programas, pastas ou sites, use Start-Process.
+- Para abrir programas, pastas ou sites, use {opener}.
 - Se uma ação for negada, não tente contornar por outro caminho: diga que não fez.
 - Quando terminar, diga o resultado numa frase.
 """
 
 
-def build(name, user, pronoun, personality, extra=""):
+def build(name, user, pronoun, personality, extra="", gender="feminino"):
     user = user.strip() or "o usuário"
     de = {"ele": "dele", "ela": "dela"}.get(pronoun, "do usuário" if user == "o usuário" else f"de {user}")
-    text = TEMPLATE.format(name=name, user=user, de=de, User_ele=user[0].upper() + user[1:],
-                           personality=personality.strip())
+    text = TEMPLATE.format(**SYSTEM, name=name, user=user, of_user="do usuário" if user == "o usuário" else f"de {user}", de=de, User_ele=user[0].upper() + user[1:],
+                           personality=personality.strip(), gender=GENDERS.get(gender, GENDERS["feminino"]))
     if extra.strip():
         text += "\nCoisas que você sabe sobre " + user + ":\n" + extra.strip() + "\n"
     return text

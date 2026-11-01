@@ -31,8 +31,44 @@ END = r"['\"]?\\?['\"]?(\s|$|;|\|)"
 WIPE_TARGETS = [r"[a-z]:", re.escape(HOME), r"\$env:userprofile", r"~", r"c:\\users"]
 
 
+# Linux: same idea, with the Unix ways of breaking a system
+LINUX_ALWAYS = [
+    (r"\bmkfs(\.\w+)?\b|\bwipefs\b|\b(fdisk|parted|gdisk|sfdisk)\b", "mexer nas partições do disco"),
+    (r"\bdd\b[^;|]*\bof=/dev/", "escrever direto num disco"),
+    (r">\s*/dev/(sd|nvme|hd|vd)", "escrever direto num disco"),
+    (r"\bshred\b", "apagar dados de forma irrecuperável"),
+    (r":\(\)\s*\{\s*:\|:&\s*\};:", "travar o PC"),
+    (r"\b(shutdown|reboot|poweroff|halt)\b|systemctl\s+(poweroff|reboot|halt)", "desligar ou reiniciar o PC"),
+    (r"systemctl\s+(stop|disable|mask)\s+[^;|]*(systemd|dbus|gdm|sddm|lightdm|networkmanager|sshd?)\b",
+     "desligar um serviço essencial do sistema"),
+    (r"\b(ufw\s+disable|iptables\s+-f)", "desligar o firewall"),
+    (r"\bchmod\b[^;|]*-r[^;|]*\s/(\s|$)|\bchown\b[^;|]*-r[^;|]*\s/(\s|$)", "mudar as permissões do sistema inteiro"),
+    (r"\b(apt(-get)?|dnf|pacman|zypper)\b[^;|]*\b(remove|purge|-r)\b[^;|]*\b(linux-image|systemd|libc6|sudo|grub)",
+     "desinstalar uma parte essencial do sistema"),
+]
+LINUX_SYSTEM = r"(^|\s|['\"])/(etc|usr|boot|bin|sbin|lib|lib64|var/lib|sys|proc)(/|\s|$|['\"])"
+LINUX_WRITE = r"(\brm\b|\bmv\b|\bcp\b|\btee\b|>|\bsed\s+-i|\btruncate\b|\bln\b)"
+LINUX_WIPE = r"\brm\b[^;|]*-[a-z]*r[a-z]*[^;|]*\s['\"]?(/|/\*|~|~/|\$home|/home|" + re.escape(os.path.expanduser("~").lower()) + r")/?['\"]?(\s|$|;|\|)"
+
+
+def _danger_linux(cmd):
+    for pattern, reason in LINUX_ALWAYS:
+        if re.search(pattern, cmd):
+            return reason
+    if re.search(LINUX_WIPE, cmd):
+        return "apagar uma pasta inteira de nível mais alto, tipo o sistema todo ou a sua pasta pessoal"
+    if re.search(LINUX_WRITE, cmd) and re.search(LINUX_SYSTEM, cmd):
+        return "mexer em arquivos do sistema"
+    return None
+
+
 def danger(tool_name, tool_input):
     """Reason (pt-BR, infinitive) why this call needs a spoken yes, or None if it is safe."""
+    if tool_name == "Bash" and os.name != "nt":
+        return _danger_linux((tool_input.get("command") or "").lower())
+    if tool_name in ("Write", "Edit", "NotebookEdit") and os.name != "nt":
+        path = (tool_input.get("file_path") or "").lower()
+        return "mexer em arquivos do sistema" if re.search(LINUX_SYSTEM, " " + path) else None
     if tool_name in ("PowerShell", "Bash"):
         cmd = (tool_input.get("command") or "").lower().replace("/", "\\")
         for pattern, reason in ALWAYS:

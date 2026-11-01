@@ -1,0 +1,7 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" stroke="white" stroke-width="6" stroke-linejoin="round">
+  <!-- Gatinha: cat head with glitch whiskers -->
+  <path d="M40 150 L40 40 L80 72 L120 72 L160 40 L160 150 Q100 190 40 150 Z"/>
+  <path d="M68 108 L88 108 M112 108 L132 108" stroke-width="12"/>
+  <path d="M92 132 L100 140 L108 132"/>
+  <path d="M8 120 L52 126 M8 142 L52 136 M192 120 L148 126 M192 142 L148 136" stroke-width="4"/>
+</svg>

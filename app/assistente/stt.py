@@ -8,6 +8,8 @@ import unicodedata
 
 def _add_cuda_dlls():
     # cuBLAS/cuDNN come from pip wheels; ctranslate2 needs their bin folders on the DLL path
+    if sys.platform != "win32":
+        return  # Linux finds them through the wheels' own library paths
     root = os.path.join(sys.prefix, "Lib", "site-packages", "nvidia")
     for d in glob.glob(os.path.join(root, "*", "bin")):
         os.add_dll_directory(d)

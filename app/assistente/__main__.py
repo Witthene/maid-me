@@ -11,9 +11,13 @@ from urllib.parse import urlparse
 
 from dotenv import load_dotenv
 
+from assistente import hub
 from assistente.safety import danger
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# the user is talking about what's on screen: send a screenshot along
+LOOK_WORDS = re.compile(r"\b(olha (isso|aqui|s[oó]|a[ií]|que|minha)|t[aá] vendo|v[eê] (isso|aqui|s[oó])|"
+                        r"minha tela|na tela|nessa tela|isso aqui|o que (voc[eê]|vc|c[eê]) acha disso|que tal (isso|esse|essa))\b", re.I)
 PERMISSION_TIMEOUT = 25
 IDLE_RESET_MINUTES = 10  # start a fresh conversation after this long idle, so history stops costing tokens
 EMOTION_TAG = re.compile(r"\[(feliz|brava|triste|surpresa|convencida|neutra)\]\s*", re.I)
@@ -62,21 +66,23 @@ class Assistant:
                 self.persona = f.read()
         except OSError:
             raise SystemExit("Falta configurar: abra o Configurar.bat primeiro.")
+        from assistente.memory import Memory, NoMemory
+        self.memory = Memory(os.path.join(ROOT, "conversas.json")) if os.getenv("MEMORY", "1") != "0" else NoMemory()
         provider = os.getenv("BRAIN", "claude-code")
         model = os.getenv("BRAIN_MODEL") or None
         if provider == "claude-code":
             self.make_brain = lambda: ClaudeSession(
-                self.persona, os.path.expanduser("~"), self.events,
+                self.persona + self.memory.recap(), os.path.expanduser("~"), self.events,
                 model=model, effort=os.getenv("CLAUDE_EFFORT", "low"))
         else:
             self.make_brain = lambda: ApiSession(
-                self.persona, os.path.expanduser("~"), self.events, provider,
+                self.persona + self.memory.recap(), os.path.expanduser("~"), self.events, provider,
                 os.getenv("BRAIN_API_KEY", ""), model, os.getenv("BRAIN_BASE_URL") or None)
 
         mute = threading.Event()
         if not self.text_mode:
             from assistente.audio import MicListener, find_device
-            print("Carregando o Whisper...")
+            hub.info("ouvido", "carregando o Whisper...")
             self.transcriber = stt.Transcriber(os.getenv("WHISPER_MODEL", "large-v3-turbo"))
             self.mic = MicListener(device=find_device(os.getenv("MIC_DEVICE")))
             mute = self.mic.muted
@@ -87,15 +93,18 @@ class Assistant:
         if synth:
             self.voice = Voice(synth, mute)
         else:
-            print("(sem voz configurada: respondendo so por texto)")
+            hub.info("voz", "sem voz configurada: respondendo só por texto")
             self.voice = TextVoice()
 
         if os.getenv("VTUBE_STUDIO", "0") != "0":
             from assistente.body import VTubeBody
             self.body = VTubeBody(self.voice, os.path.join(ROOT, "vts_token.txt"))
             if os.getenv("OVERLAY", "0") != "0":
-                from assistente.overlay import Overlay
-                self.overlay = Overlay(scale=float(os.getenv("OVERLAY_SCALE", "0.5")))
+                try:  # captures VTube Studio's window: Windows only
+                    from assistente.overlay import Overlay
+                    self.overlay = Overlay(scale=float(os.getenv("OVERLAY_SCALE", "0.5")))
+                except Exception as e:
+                    hub.info("corpo", f"avatar flutuante indisponível aqui ({e.__class__.__name__})")
         else:
             from assistente.body import NoBody
             self.body = NoBody()
@@ -119,11 +128,21 @@ class Assistant:
     def _stt_loop(self):
         while True:
             pcm, overlap = self.mic.utterances.get()
-            if len(pcm) < 0.5 * 16000:
-                continue
+            if len(pcm) < 0.5 * 16000 or (hub.sink and (not hub.in_call.is_set() or hub.call_muted.is_set())):
+                continue  # in the app window the open mic only counts during a call
             text = self.transcriber.transcribe(pcm)
             if text:
                 self.events.put(("heard", (text, overlap)))
+
+    def voice_note(self, pcm):
+        """A voice message from the app: transcribed off the main loop and handled like typed text."""
+        def work():
+            text = self.transcriber.transcribe(pcm)
+            if text:
+                self.events.put(("typed", text))
+            else:
+                hub.note("não entendi nada no áudio")
+        threading.Thread(target=work, daemon=True).start()
 
     def _stdin_loop(self):
         for line in sys.stdin:
@@ -139,7 +158,7 @@ class Assistant:
             self.mic.start()
             threading.Thread(target=self._stt_loop, daemon=True).start()
         self.voice.say(f"{self.name} online.")
-        print(f"Pronto. Diga \"Ei, {self.name}\" e o que voce quer. Ctrl+C para sair.\n")
+        hub.ready(self.name)
         quitting = False
         while not (quitting and not self.busy and not self.pending):
             try:
@@ -154,12 +173,26 @@ class Assistant:
                     continue
             if kind == "heard":
                 self.on_heard(*data)
+            elif kind == "typed":
+                self.on_heard(data, typed=True)
+            elif kind == "image":
+                self.on_image(data)
+            elif kind == "permission":
+                if self.pending:
+                    self.resolve_permission(data)
+            elif kind == "stop":
+                hub.note("interrompendo")
+                self.voice.stop()
+                if self.busy:
+                    self.brain.interrupt()
+            elif kind == "say":
+                self.on_say(data)
             elif kind == "watch":
                 self.on_watch(data)
             elif kind == "claude":
                 self.on_claude(data)
             elif kind == "claude_exit":
-                print(f"[cerebro] processo terminou (codigo {data}); reiniciando")
+                hub.error("cérebro", f"o processo caiu (código {data}), reiniciando")
                 self.busy, self.pending = False, None
                 self.voice.say("Meu cérebro reiniciou. Esqueci o que a gente estava falando.")
                 self.brain = self.make_brain()
@@ -171,25 +204,26 @@ class Assistant:
             self.open_window_after_speech = False
             self.listen_until = time.time() + self.followup
         if self.pending and self.voice.idle.is_set() and time.time() > self.pending["deadline"]:
-            print("   (sem resposta: negado)")
+            hub.note("sem resposta, contei como não")
             self.resolve_permission(False)
         if (self.turns and not self.busy and not self.pending
                 and time.time() - self.last_activity > self.idle_reset):
-            print("   (parada ha um tempo: comecando conversa nova para economizar tokens)")
+            hub.note("parada há um tempo: conversa nova pra economizar tokens")
             old, self.brain = self.brain, self.make_brain()
             old.close()
             self.turns = 0
 
-    def on_heard(self, text, overlap=False):
+    def on_heard(self, text, overlap=False, typed=False):
         if overlap:
             # heard while she was talking: probably her own voice, only a stop command counts
             if self.stt.heard_stop(text):
-                print(f"Voce: {text}\n   (interrompendo)")
+                hub.you(text)
+                hub.note("interrompendo")
                 self.voice.stop()
                 if self.busy:
                     self.brain.interrupt()
             return
-        print(f"Voce: {text}")
+        hub.you(text)
         if self.pending:
             answer = self.stt.yes_no(text)
             if answer is None:
@@ -203,24 +237,25 @@ class Assistant:
             self.resolve_permission(answer)
             return
 
-        woke = self.text_mode or self.stt.has_wake(text)
+        woke = self.text_mode or typed or self.stt.has_wake(text)
         if self.busy:
             if woke and self.stt.is_stop(text):
-                print("   (interrompendo)")
+                hub.note("interrompendo")
                 self.voice.stop()
                 self.brain.interrupt()
             elif woke:
                 # Claude Code takes extra user messages mid-turn, so pass it along instead of dropping it
-                print("   (ocupada: mensagem entregue mesmo assim)")
+                hub.note(hub.g("ocupada", "ocupado", "em outra tarefa") + ", mas entreguei a mensagem")
                 self.voice.say(random.choice(["Anotado.", "Já vejo isso.", "Ouvi."]))
+                self.memory.add("ele", text)
                 self.brain.send(text)
             else:
-                print("   (ocupado, sem o nome, ignorando)")
+                hub.note(hub.g("ocupada", "ocupado", "em outra tarefa") + f" e sem \"{self.name}\", ignorei")
             return
         if not woke and time.time() > self.listen_until:
-            print("   (sem o nome, ignorando)")
+            hub.note(f"sem \"{self.name}\", ignorei")
             return
-        if not self.text_mode and self.stt.only_wake(text):
+        if not self.text_mode and not typed and self.stt.only_wake(text):
             self.voice.say(random.choice(["Fala.", "Diz aí.", "Tô ouvindo."]))
             self.open_window_after_speech = True
             return
@@ -228,14 +263,53 @@ class Assistant:
         self.busy = True
         self.body.thinking = True
         self.last_activity = time.time()
+        self.memory.add("ele", text)
+        if os.getenv("LOOK", "1") != "0" and LOOK_WORDS.search(text):  # "olha isso", "tá vendo?": takes a look at the screen together
+            try:
+                from assistente.watch import look
+                hub.look()
+                self.brain.send(look(f"{text}\n\n(Print da tela do usuário agora, tirado porque ele parece estar falando "
+                                     "do que está vendo. Use só se tiver a ver.)"))
+                return
+            except Exception as e:
+                hub.error("tela", str(e))
         self.brain.send(text)
+
+    def on_image(self, data):
+        """A photo or screenshot sent from the app window (already shown there as a bubble)."""
+        caption = data.get("caption") or "Olha essa imagem que eu te mandei."
+        content = [{"type": "image", "source": {"type": "base64", "media_type": "image/jpeg", "data": data["data"]}},
+                   {"type": "text", "text": f"(O usuário mandou uma imagem pelo app) {caption}"}]
+        if not self.busy:
+            self.busy = True
+            self.body.thinking = True
+            self.last_activity = time.time()
+        self.brain.send(content)
+
+    def on_say(self, line):
+        """Spontaneous line made locally (vision model or canned): spoken without touching the brain."""
+        if (self.busy or self.pending or not self.voice.idle.is_set()
+                or time.time() < self.listen_until or time.time() - self.last_activity < 20):
+            return
+        emotions = EMOTION_TAG.findall(line)
+        text = EMOTION_TAG.sub("", line).strip()
+        if not text:
+            return
+        emotion = emotions[-1].lower() if emotions else None
+        if emotion:
+            self.body.set_emotion(emotion)
+        hub.yui(text, emotion)
+        self.voice.say(text)
+        self.memory.add("yui", text)
 
     def on_watch(self, content):
         # only chime in when nobody is talking
         if (self.busy or self.pending or not self.voice.idle.is_set()
                 or time.time() < self.listen_until or time.time() - self.last_activity < 20):
             return
-        print("   (comentando o que esta na tela)")
+        hub.note("comentando o que está na tela")
+        if isinstance(content, list):
+            hub.look()
         self.busy = self.watch_turn = True
         self.brain.send(content)
 
@@ -251,19 +325,28 @@ class Assistant:
                 if emotions:
                     self.body.set_emotion(emotions[-1].lower())
                 if t:
-                    print(f"{self.name}: {t}")
+                    hub.yui(t, emotions[-1].lower() if emotions else None)
                     self.body.thinking = False
                     self.voice.say(t)
                     self.text_this_message = True
+                    if not self.watch_turn:
+                        self.memory.add("yui", t)
             if tools:
                 self.body.thinking = True
             for tool in tools:
-                print(f"   [{tool['name']}] {str(tool.get('input'))[:160]}")
+                hub.tool(tool["name"], tool.get("input"))
                 if not self.text_this_message and tool["name"] in TOOL_LINES:
                     self.voice.say(TOOL_LINES[tool["name"]])
                     self.text_this_message = True
             if tools:
                 self.text_this_message = False
+        elif kind == "user":  # tool results: a failed command shows the error effect
+            content = (msg.get("message") or {}).get("content")
+            for c in content if isinstance(content, list) else ():
+                if isinstance(c, dict) and c.get("type") == "tool_result" and c.get("is_error"):
+                    out = c.get("content")
+                    text = out if isinstance(out, str) else " ".join(x.get("text", "") for x in out or () if isinstance(x, dict))
+                    hub.error("ferramenta", text.strip().splitlines()[0][:160] if text.strip() else "falhou")
         elif kind == "control_request":
             req = msg.get("request", {})
             if req.get("subtype") == "can_use_tool":
@@ -274,8 +357,8 @@ class Assistant:
                 question = permission_question(req, reason)
                 self.body.thinking = False
                 self.body.set_emotion("surpresa")
-                print(f"   [permissao] {req.get('tool_name')}: {str(req.get('input'))[:300]}")
-                print(f"{self.name}: {question}")
+                hub.yui(question, "surpresa")
+                hub.ask(question, req.get("tool_name", ""), req.get("input"))
                 self.voice.say(question)
                 self.pending = {"msg": msg, "tries": 0, "deadline": time.time() + PERMISSION_TIMEOUT}
             else:
@@ -289,32 +372,42 @@ class Assistant:
             self.watch_turn = False
             self.text_this_message = False
             if msg.get("is_error"):
-                print(f"[cerebro] erro: {msg.get('subtype')} {msg.get('result', '')}")
-            print("   (pronto)")
+                hub.error("cérebro", f"{msg.get('subtype')} {msg.get('result', '')}")
+            hub.done()
             self.open_window_after_speech = True
 
     def resolve_permission(self, allow):
-        print("   (autorizado)" if allow else "   (negado)")
+        hub.answer(allow)
         self.brain.answer_permission(self.pending["msg"], allow)
         self.pending = None
 
 
 def main():
+    if sys.stdout is None:  # started with pythonw (the app window): keep a log instead of a console
+        sys.stdout = sys.stderr = open(os.path.join(ROOT, "assistente.log"), "w", encoding="utf-8", buffering=1)
     sys.stdout.reconfigure(encoding="utf-8")
     load_dotenv(os.path.join(ROOT, ".env"), override=True)
+    hub.NAME = os.getenv("ASSISTANT_NAME", "Assistente")
+    hub.GENDER = os.getenv("ASSISTANT_GENDER", "feminino")
     parser = argparse.ArgumentParser(prog="assistente")
     parser.add_argument("--mics", action="store_true", help="lista os microfones e sai")
     parser.add_argument("--texto", action="store_true", help="digitar em vez de falar")
     parser.add_argument("--mudo", action="store_true", help="responder so em texto")
+    parser.add_argument("--console", action="store_true", help="sem janela, so o terminal")
     args = parser.parse_args()
     if args.mics:
         from assistente.audio import list_devices
         list_devices()
         return
+    if not (args.console or args.texto):
+        from assistente.app import run_app
+        run_app(lambda: Assistant(args))
+        return
+    hub.banner()
     try:
         Assistant(args).run()
     except KeyboardInterrupt:
-        print("\nTchau.")
+        hub.note("tchau!")
 
 
 if __name__ == "__main__":
