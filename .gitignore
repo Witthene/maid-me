@@ -1,0 +1,14 @@
+# local install
+.venv/
+__pycache__/
+*.pyc
+
+# personal settings and keys: never commit
+.env
+persona.md
+personalidade.txt
+sobre-voce.txt
+vts_token.txt
+
+# release builds
+*.zip

@@ -1,0 +1,3 @@
+# Only installed when there is an NVIDIA card: lets Whisper run on the GPU
+nvidia-cublas-cu12
+nvidia-cudnn-cu12>=9,<10

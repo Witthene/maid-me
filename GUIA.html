@@ -1,0 +1,103 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Guia do Maid Me</title>
+<style>
+  body { font-family: "Segoe UI", sans-serif; max-width: 820px; margin: 30px auto; padding: 0 20px; line-height: 1.6; color: #222; background: #faf8ff; }
+  h1 { color: #6b3fd4; }
+  h2 { color: #6b3fd4; border-bottom: 2px solid #e4dbff; padding-bottom: 4px; margin-top: 40px; }
+  code, kbd { background: #eee8ff; padding: 1px 6px; border-radius: 4px; }
+  .box { background: #fff; border-left: 4px solid #6b3fd4; padding: 10px 16px; margin: 14px 0; border-radius: 4px; }
+  .warn { border-color: #d48a3f; }
+  table { border-collapse: collapse; width: 100%; background: #fff; }
+  td, th { border: 1px solid #ddd; padding: 6px 10px; text-align: left; vertical-align: top; }
+  th { background: #eee8ff; }
+</style>
+</head>
+<body>
+<h1>Maid Me</h1>
+<p>Monte a sua própria assistente de voz: uma assistente que você chama pelo nome, conversa por voz, tem a personalidade que você escolher e mexe no seu PC: abre programas, procura arquivos, pesquisa na internet e por aí vai. Opcionalmente ela ganha um corpo de VTuber.</p>
+
+<div class="box">Resumo: <b>1</b> rode o <code>Instalar Maid Me.bat</code> &rarr; <b>2</b> preencha o configurador &rarr; <b>3</b> clique em <b>Salvar e iniciar</b> &rarr; <b>4</b> diga <b>"Ei, &lt;nome&gt;"</b>.</div>
+
+<h2>Do que você precisa</h2>
+<ul>
+  <li>Windows 10 ou 11 e um microfone.</li>
+  <li>Uma chave de API de alguma IA (tem opção grátis, veja abaixo) <i>ou</i> uma assinatura do Claude.</li>
+  <li>Recomendado: placa de vídeo NVIDIA. Sem ela funciona, só entende a voz um pouco mais devagar.</li>
+</ul>
+
+<h2>1. Instalar</h2>
+<ol>
+  <li>Extraia a pasta num lugar fixo, por exemplo <code>Documentos\Maid Me</code> (não deixe dentro de Downloads, nem dentro de Arquivos de Programas).</li>
+  <li>Dê dois cliques em <code>Instalar Maid Me.bat</code>. Ele instala o Python se precisar, baixa as bibliotecas e cria atalhos no menu Iniciar e o atalho <b>Maid Me</b> na área de trabalho. Demora alguns minutos.</li>
+  <li>No fim, o configurador abre sozinho. Dá pra abrir de novo depois pelo atalho <b>Configurar Maid Me</b> no menu Iniciar.</li>
+</ol>
+<div class="box warn">Se o Windows mostrar "O Windows protegeu o computador", clique em <b>Mais informações</b> &rarr; <b>Executar assim mesmo</b>.</div>
+
+<h2>2. Configurar</h2>
+<h3>Aba Identidade</h3>
+<ul>
+  <li><b>Nome do assistente</b>: o nome que você vai falar pra chamar. Nomes curtos e incomuns funcionam melhor (o reconhecimento confunde nomes que parecem palavras comuns).</li>
+  <li><b>Outras grafias</b>: se você chama e ela não atende, olhe na janela preta como o nome foi escrito (ex.: "Mica" virou "Mika") e coloque aqui, separado por vírgula.</li>
+  <li><b>Personalidade</b>: escolha uma pronta ou escreva a sua na caixa de descrição.</li>
+  <li><b>Coisas sobre você</b>: o que ela deve sempre saber (seus jogos, apelido, etc.).</li>
+</ul>
+
+<h3>Aba Cérebro: qual IA usar</h3>
+<p>Escolha um serviço, cole a chave e clique em <b>Testar cérebro</b>. <b>Listar modelos</b> mostra os modelos disponíveis na sua conta.</p>
+<table>
+  <tr><th>Opção</th><th>Custo</th><th>Onde pegar a chave</th></tr>
+  <tr><td>Google Gemini</td><td>Tem uso gratuito, ótimo pra começar</td><td><a href="https://aistudio.google.com/apikey">aistudio.google.com/apikey</a> &rarr; "Create API key"</td></tr>
+  <tr><td>Claude (assinatura)</td><td>Usa seu plano Claude Pro/Max, sem pagar à parte</td><td>Sem chave: veja o quadro abaixo</td></tr>
+  <tr><td>Claude (chave de API)</td><td>Pago por uso</td><td><a href="https://console.anthropic.com">console.anthropic.com</a> &rarr; API Keys</td></tr>
+  <tr><td>OpenAI (ChatGPT)</td><td>Pago por uso</td><td><a href="https://platform.openai.com/api-keys">platform.openai.com/api-keys</a></td></tr>
+  <tr><td>OpenRouter</td><td>Vários modelos numa chave só, alguns grátis</td><td><a href="https://openrouter.ai/keys">openrouter.ai/keys</a></td></tr>
+  <tr><td>Groq</td><td>Tem uso gratuito, muito rápido</td><td><a href="https://console.groq.com/keys">console.groq.com/keys</a></td></tr>
+  <tr><td>DeepSeek</td><td>Pago, bem barato</td><td><a href="https://platform.deepseek.com">platform.deepseek.com</a></td></tr>
+  <tr><td>Ollama</td><td>Grátis, roda no seu PC (precisa de PC forte)</td><td>Sem chave: instale em <a href="https://ollama.com">ollama.com</a> e baixe um modelo que use ferramentas</td></tr>
+</table>
+<div class="box"><b>Claude pela assinatura:</b> instale o <a href="https://nodejs.org">Node.js</a> (versão LTS), abra o PowerShell e rode <code>npm install -g @anthropic-ai/claude-code</code>. Depois rode <code>claude</code>, faça login com sua conta e feche. Pronto, é só escolher "Claude (assinatura)" no configurador.</div>
+<div class="box warn">A chave de API é como uma senha: não mande pra ninguém. Ela fica só no arquivo <code>app\.env</code>. Modelos pequenos/fracos às vezes se atrapalham pra usar o PC; se ela fizer besteira, troque por um modelo melhor.</div>
+
+<h3>Aba Voz</h3>
+<ul>
+  <li><b>Microsoft Edge</b>: grátis e sem chave. Escolha a voz na lista e clique em <b>Ouvir a voz</b>.</li>
+  <li><b>Fish Audio</b> (<a href="https://fish.audio">fish.audio</a>): vozes muito mais naturais e de personagens. A chave fica em API Keys no painel; o ID da voz é o código que aparece no endereço da página da voz.</li>
+  <li><b>ElevenLabs</b> (<a href="https://elevenlabs.io">elevenlabs.io</a>): a chave fica no seu perfil; o ID aparece na biblioteca de vozes ("Copy voice ID").</li>
+</ul>
+
+<h3>Aba Microfone</h3>
+<p>Escolha o microfone (vazio = o padrão do Windows). Sem placa NVIDIA, o programa usa automaticamente um reconhecimento mais leve.</p>
+
+<h3>Aba Avatar e extras (opcional)</h3>
+<ol>
+  <li>Instale o <b>VTube Studio</b> (grátis na Steam) e carregue um modelo.</li>
+  <li>No VTube Studio, vá em Configurações e ligue <b>"Start API (allow plugins)"</b> na porta 8001.</li>
+  <li>Marque "Usar avatar do VTube Studio" no configurador. Na primeira vez, aceite o pedido do plugin dentro do VTube Studio.</li>
+  <li>A boca mexe com a voz. Para as expressões funcionarem, o modelo precisa ter expressões com nomes como <i>feliz/happy</i>, <i>brava/angry</i>, <i>triste/sad</i>, <i>surpresa/surprise</i>, <i>convencida/smug</i>.</li>
+  <li>"Avatar flutuando": mostra o modelo no canto da tela, por cima de tudo. Deixe o fundo do VTube Studio numa cor sólida e a janela dele aberta (pode ficar atrás das outras, só não minimize).</li>
+</ol>
+
+<h2>3. Usar</h2>
+<ul>
+  <li>Abra pelo atalho <b>Maid Me</b>. Espere aparecer "Pronto" na janela preta.</li>
+  <li>Fale <b>"Ei, &lt;nome&gt;, abre o YouTube"</b>. Depois que ela responde, dá pra continuar falando por uns segundos sem repetir o nome.</li>
+  <li>Pra calar a boca dela: <b>"&lt;nome&gt;, para"</b>.</li>
+  <li>Coisas perigosas (formatar disco, apagar pasta do sistema, desligar o PC...) ela pergunta antes. Responda <b>sim</b> ou <b>não</b> falando.</li>
+  <li>Sem microfone? Rode <code>app\Iniciar.bat --texto</code> pra conversar digitando.</li>
+  <li>Pra fechar: feche a janela preta ou aperte <kbd>Ctrl</kbd>+<kbd>C</kbd> nela.</li>
+</ul>
+
+<h2>Problemas comuns</h2>
+<table>
+  <tr><th>Problema</th><th>Solução</th></tr>
+  <tr><td>Ela não atende quando chamo</td><td>Veja na janela preta como o nome foi escrito e adicione em "Outras grafias". Confira se o microfone certo está escolhido.</td></tr>
+  <tr><td>"Meu cérebro deu erro"</td><td>Abra o configurador e use "Testar cérebro": geralmente é chave errada, crédito acabado ou nome de modelo errado.</td></tr>
+  <tr><td>Não sai som</td><td>Use "Ouvir a voz" no configurador e confira a saída de som do Windows.</td></tr>
+  <tr><td>Demora muito pra entender o que falei</td><td>Sem placa NVIDIA isso é normal. Escolha "base" em Precisão do reconhecimento pra ficar mais rápido.</td></tr>
+  <tr><td>Quero mudar a personalidade a fundo</td><td>Edite o arquivo <code>app\persona.md</code> (é o "roteiro" dela). Atenção: o configurador reescreve esse arquivo quando você salva.</td></tr>
+</table>
+</body>
+</html>

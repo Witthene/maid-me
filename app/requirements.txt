@@ -1,0 +1,14 @@
+faster-whisper>=1.2
+sounddevice>=0.5
+soxr>=1.0
+scipy>=1.14
+numpy>=2.0
+av>=13
+requests>=2.32
+python-dotenv>=1.0
+edge-tts>=7.0
+websocket-client>=1.8
+pillow>=11
+opencv-python>=4.10
+windows-capture>=1.4
+customtkinter>=5.2

@@ -1,0 +1,38 @@
+﻿MAID ME 1.0 - Assistente de voz para Windows
+Código aberto, licença MIT (veja LICENSE.txt).
+
+O QUE É
+Uma assistente que você chama pelo nome e que conversa por voz, com nome e
+personalidade escolhidos por você. Ela pode abrir programas, procurar
+arquivos e pesquisar na internet usando a IA que você escolher (Gemini,
+Claude, ChatGPT e outras).
+
+COMO INSTALAR
+1. Extraia esta pasta num lugar fixo (por exemplo, Documentos).
+2. Dê dois cliques em "Instalar Maid Me.bat".
+3. Preencha a configuração que abre no final e clique em "Salvar e iniciar".
+O passo a passo completo está no GUIA.html.
+
+O QUE O INSTALADOR FAZ
+- Instala o Python oficial pelo winget (da Microsoft), se você ainda não tiver.
+- Baixa as bibliotecas necessárias do PyPI, o repositório oficial do Python,
+  para dentro da pasta "app\.venv". Nada é instalado fora desta pasta.
+- Cria atalhos na área de trabalho e no menu Iniciar.
+- Não roda nada ao ligar o Windows e não roda nada em segundo plano.
+
+POR QUE O WINDOWS PODE AVISAR
+Os arquivos .bat não têm assinatura digital (um certificado pago), então o
+Windows pode mostrar "O Windows protegeu o computador". Todo o código é texto
+aberto: os arquivos .bat, .ps1 e .py podem ser abertos no Bloco de Notas e
+lidos antes de rodar.
+
+PRIVACIDADE
+Suas chaves de API e configurações ficam só neste computador (app\.env).
+O que você fala é transcrito no próprio PC. Só o texto da conversa é enviado
+para o serviço de IA e de voz que você escolheu (e prints da tela, só se você
+ligar o recurso de comentar vídeos).
+Ações perigosas (apagar pastas do sistema, formatar, desligar o PC...) sempre
+pedem a sua confirmação por voz antes.
+
+DESINSTALAR
+Apague esta pasta e os atalhos "Maid Me" da área de trabalho e do menu Iniciar.
