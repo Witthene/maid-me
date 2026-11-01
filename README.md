@@ -3,11 +3,14 @@
 </p>
 
 <h1 align="center">Maid Me</h1>
-<p align="center">Monte a sua própria assistente de voz para Windows: com nome, personalidade e voz escolhidos por você.</p>
+<p align="center">Monte a sua própria assistente de voz para Windows: com nome, personalidade e voz escolhidos por você.<br>
+<i>Maid de empregada, "made me" de "me fez". Sim, o nome é um trocadilho. Não, não vamos mudar.</i></p>
 
 ---
 
-Você chama pelo nome ("Ei, Mika, abre o YouTube"), ela responde falando e mexe no seu PC: abre programas, procura arquivos, pesquisa na internet. Opcionalmente ela ganha um corpo de VTuber pelo VTube Studio.
+Você chama pelo nome ("Ei, Mika, abre o YouTube"), ela responde falando e mexe no seu PC: abre programas, procura arquivos, pesquisa na internet. Opcionalmente ela ganha um corpo de VTuber pelo VTube Studio e passa a fazer careta pra você também.
+
+É tipo ter uma Alexa, só que com personalidade, sem ficar te oferecendo produto e que obedece de verdade. Na maioria das vezes.
 
 ## Recursos
 
@@ -15,7 +18,7 @@ Você chama pelo nome ("Ei, Mika, abre o YouTube"), ela responde falando e mexe 
 - **Voz**: Microsoft Edge (grátis, sem cadastro), Fish Audio ou ElevenLabs.
 - **Reconhecimento de fala no próprio PC** com Whisper (GPU NVIDIA se tiver, processador se não tiver).
 - **Personalidades prontas** (sarcástica, fofa, tsundere, mordomo...) ou escritas por você.
-- **Segurança**: comandos perigosos (formatar disco, apagar pastas do sistema, desligar o PC...) só rodam depois de você dizer "sim".
+- **Segurança**: comandos perigosos (formatar disco, apagar pastas do sistema, desligar o PC...) só rodam depois de você dizer "sim". Ela é atrevida, não maluca.
 - **Avatar** no VTube Studio, com boca sincronizada e expressões, e modo flutuante na tela.
 - Configuração por uma janela, sem editar arquivo nenhum.
 
